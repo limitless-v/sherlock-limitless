@@ -1,0 +1,91 @@
+# Environment
+.env
+.env.local
+.env.*.local
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.hypothesis/
+venv/
+.venv/
+ENV/
+
+# Node / Frontend
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project storage (runtime data)
+uploads/*
+!uploads/.gitkeep
+cache/*
+!cache/.gitkeep
+embeddings/*
+!embeddings/.gitkeep
+results/*
+!results/.gitkeep
+logs/*
+!logs/.gitkeep
+models/*
+!models/.gitkeep
+!models/README.md
+data/*
+!data/.gitkeep
+
+# AI weights (large binaries)
+*.onnx
+*.bin
+*.pth
+*.pt
+*.index
+*.faiss
+
+# Docker
+*.log
+
+# Secrets
+*.pem
+*.key
+credentials.json

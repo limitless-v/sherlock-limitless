@@ -1,0 +1,8 @@
+# Optional / heavy AI dependencies (install after requirements.txt)
+# insightface provides SCRFD / RetinaFace detection + ArcFace recognition
+# via ONNX Runtime. Windows + Python 3.12: official wheels since 1.0.x
+# install cleanly. Model files download on first use to models/.
+insightface>=1.0.0,<2.0.0
+# faiss-cpu provides the local nearest-neighbor index (Phase 6). Ships
+# Windows wheels since 1.7.x.
+faiss-cpu>=1.7.3
