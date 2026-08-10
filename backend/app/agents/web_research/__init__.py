@@ -1,0 +1,1 @@
+"""Web research subpackage (roadmap Phases 19-22)."""

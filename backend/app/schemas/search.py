@@ -67,6 +67,7 @@ class SearchResponseRead(ORMModel):
     mode: SearchMode
     status: str = "completed"
     results: list[SearchResultRead] = Field(default_factory=list)
+    providers: dict[str, dict] = Field(default_factory=dict)
 
 
 class SearchCreateResponse(BaseModel):

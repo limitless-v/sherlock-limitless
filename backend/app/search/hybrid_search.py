@@ -1,11 +1,16 @@
-"""Hybrid search service (roadmap section 10).
+"""Hybrid search service (roadmap section 10, wired in Phase 18).
 
 Runs LOCAL and INTERNET searches independently and tolerates partial
-failure: if one source fails, the other's results are still returned.
+failure: one unavailable source (e.g. Agent Reach not installed) yields a
+degraded-but-usable response instead of a failure. Local results always
+survive.
 """
+
+from __future__ import annotations
 
 from app.search.local_search import LocalSearchService
 from app.search.internet_search import InternetSearchService
+from app.search.modes import SearchMode
 from app.search.request_models import SearchRequest
 from app.search.result_models import SearchResponse
 
@@ -23,4 +28,24 @@ class HybridSearchService:
 
     async def search(self, request: SearchRequest) -> SearchResponse:
         """Merge local and internet results; one failing source is non-fatal."""
-        raise NotImplementedError("Hybrid search not implemented in scaffold.")
+        local = await self._local_search.search(request)
+        internet = await self._internet_search.search(request)
+
+        seen: set[str] = set()
+        merged = []
+        for result in (*local.results, *internet.results):
+            key = f"{result.url}|{result.source}"
+            if key in seen:
+                continue
+            seen.add(key)
+            merged.append(result)
+
+        status = "degraded" if internet.status == "degraded" else "completed"
+
+        return SearchResponse(
+            search_id=str(request.image_id),
+            mode=SearchMode.HYBRID,
+            status=status,
+            results=merged,
+            providers={"local": local.providers or {"available": True}, **internet.providers},
+        )

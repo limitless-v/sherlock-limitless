@@ -75,9 +75,26 @@ class Settings(BaseSettings):
     search_default_mode: str = Field(default="internet", alias="SEARCH_DEFAULT_MODE")
     search_max_results: int = Field(default=50, alias="SEARCH_MAX_RESULTS")
 
+    ocr_language: str = Field(default="eng", alias="OCR_LANGUAGE")
+    tesseract_path: str = Field(default="", alias="TESSERACT_PATH")
+    discovery_max_candidates: int = Field(default=20, alias="DISCOVERY_MAX_CANDIDATES")
+
     agent_reach_enabled: bool = Field(default=False, alias="AGENT_REACH_ENABLED")
     agent_reach_timeout_seconds: int = Field(default=30, alias="AGENT_REACH_TIMEOUT_SECONDS")
     agent_reach_max_candidates: int = Field(default=10, alias="AGENT_REACH_MAX_CANDIDATES")
+    agent_reach_cmd: str = Field(default="", alias="AGENT_REACH_CMD")
+    agent_reach_search_channel: str = Field(default="exa.search", alias="AGENT_REACH_SEARCH_CHANNEL")
+
+    http_user_agent: str = Field(default="FaceSearchOSINT/1.0 (+research)", alias="HTTP_USER_AGENT")
+    agent_max_pages: int = Field(default=20, alias="AGENT_MAX_PAGES")
+    agent_max_depth: int = Field(default=3, alias="AGENT_MAX_DEPTH")
+    agent_max_images: int = Field(default=50, alias="AGENT_MAX_IMAGES")
+    agent_max_runtime_seconds: float = Field(default=120.0, alias="AGENT_MAX_RUNTIME_SECONDS")
+    agent_max_requests_per_domain: int = Field(default=30, alias="AGENT_MAX_REQUESTS_PER_DOMAIN")
+    agent_per_domain_min_interval: float = Field(default=1.0, alias="AGENT_PER_DOMAIN_MIN_INTERVAL")
+    agent_http_timeout_seconds: float = Field(default=10.0, alias="AGENT_HTTP_TIMEOUT_SECONDS")
+    agent_respect_robots: bool = Field(default=True, alias="AGENT_RESPECT_ROBOTS")
+    agent_allow_domains: str = Field(default="", alias="AGENT_ALLOW_DOMAINS")
 
     ollama_enabled: bool = Field(default=False, alias="OLLAMA_ENABLED")
     ollama_base_url: str = Field(default="http://localhost:11434", alias="OLLAMA_BASE_URL")

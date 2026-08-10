@@ -1,9 +1,9 @@
-"""Local Search API integration test (roadmap Phase 9).
+"""Local Search API integration test (roadmap Phases 9-10, 18).
 
 Overrides the search-service dependency so the real controller +
 orchestrator run against canned strategies — no models, DB, or FAISS needed.
-Confirms LOCAL returns results (202 -> response body) while INTERNET and
-HYBRID remain 501 until their later phases.
+Confirms LOCAL returns results while INTERNET and HYBRID (Agent Reach not
+installed in tests) respond with a degraded-but-usable 202 instead of 501.
 """
 
 from uuid import uuid4
@@ -56,7 +56,7 @@ def _local_response(request) -> SearchResponse:
 
 @pytest.fixture
 def override_search_service():
-    internet = InternetSearchService(AgentReachClient())
+    internet = InternetSearchService(agent_reach_client=AgentReachClient())
     local = _StubStrategy(_local_response)
     hybrid = HybridSearchService(local, internet)  # type: ignore[arg-type]
     orchestrator = SearchOrchestrator(
@@ -88,21 +88,31 @@ async def test_local_mode_returns_results(override_search_service):
     assert body["results"][0]["source"] == "local"
 
 
-async def test_internet_mode_still_501(override_search_service):
+async def test_internet_mode_degraded_when_reach_missing(override_search_service):
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.post(
             "/api/v1/search",
             json={"image_id": str(uuid4()), "mode": "internet"},
         )
-    assert response.status_code == 501
+    assert response.status_code == 202
+    body = response.json()
+    assert body["status"] == "degraded"
+    assert body["results"] == []
+    assert body["providers"]["agent_reach"]["available"] is False
 
 
-async def test_hybrid_mode_still_501(override_search_service):
+async def test_hybrid_mode_keeps_local_results_when_reach_missing(override_search_service):
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.post(
             "/api/v1/search",
             json={"image_id": str(uuid4()), "mode": "hybrid"},
         )
-    assert response.status_code == 501
+    assert response.status_code == 202
+    body = response.json()
+    assert body["status"] == "degraded"
+    assert len(body["results"]) == 1
+    assert body["results"][0]["source"] == "local"
+    assert body["providers"]["local"]["available"] is True
+    assert body["providers"]["agent_reach"]["available"] is False

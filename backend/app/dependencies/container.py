@@ -6,6 +6,7 @@ Depends. The API layer stays thin — it only calls the orchestrator.
 
 from collections.abc import AsyncGenerator
 
+import httpx
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,9 +17,20 @@ from app.ai.face_detection.detector import FaceDetector
 from app.ai.embedding.generator import EmbeddingGenerator
 from app.ai.vector_db.faiss_index import FaissIndex
 from app.ai.vector_db.vector_store import VectorStore
+from app.agents.web_research.agent import ResearchAgent
+from app.agents.web_research.policies import CrawlPolicies
+from app.agents.web_research.tools import WebToolbox
 from app.config.settings import Settings, get_settings
 from app.database.session import get_db_session
+from app.discovery.context.exif import ExifExtractor
+from app.discovery.context.ocr import TesseractOCREngine
+from app.discovery.context.visual import HeuristicVisualAnalyzer
+from app.discovery.context.builder import SearchContextBuilder
+from app.discovery.engine import DiscoveryEngine
+from app.discovery.fingerprinting import FingerprintService
+from app.osint.agent_reach.capabilities import AgentReachCapabilities
 from app.osint.agent_reach.client import AgentReachClient
+from app.osint.agent_reach.provider import AgentReachWebProvider
 from app.osint.crawler.images import CandidateCrawler
 from app.repositories.faces import FaceRepository
 from app.repositories.search_history import SearchHistoryRepository
@@ -81,12 +93,109 @@ def get_face_repository(session: AsyncSession = Depends(get_session)) -> FaceRep
     return FaceRepository(session)
 
 
-def get_agent_reach_client() -> AgentReachClient:
-    return AgentReachClient()
+def get_agent_reach_client(settings: Settings = Depends(get_settings_dep)) -> AgentReachClient:
+    return AgentReachClient(
+        cmd=settings.agent_reach_cmd or None,
+        timeout_seconds=settings.agent_reach_timeout_seconds,
+        search_channel=settings.agent_reach_search_channel,
+    )
+
+
+def get_agent_reach_capabilities(
+    client: AgentReachClient = Depends(get_agent_reach_client),
+) -> AgentReachCapabilities:
+    capabilities = AgentReachCapabilities()
+    capabilities.refresh(client)
+    return capabilities
+
+
+def get_agent_reach_web_provider(
+    client: AgentReachClient = Depends(get_agent_reach_client),
+    capabilities: AgentReachCapabilities = Depends(get_agent_reach_capabilities),
+    settings: Settings = Depends(get_settings_dep),
+) -> AgentReachWebProvider:
+    return AgentReachWebProvider(client, capabilities, enabled=settings.agent_reach_enabled)
 
 
 def get_candidate_crawler() -> CandidateCrawler:
     return CandidateCrawler()
+
+
+def get_exif_extractor() -> ExifExtractor:
+    return ExifExtractor()
+
+
+def get_ocr_engine(settings: Settings = Depends(get_settings_dep)) -> TesseractOCREngine:
+    return TesseractOCREngine(
+        languages=tuple(lang.strip() for lang in settings.ocr_language.split(",") if lang.strip()),
+        tesseract_cmd=settings.tesseract_path or None,
+    )
+
+
+def get_visual_analyzer() -> HeuristicVisualAnalyzer:
+    return HeuristicVisualAnalyzer()
+
+
+def get_fingerprint_service() -> FingerprintService:
+    return FingerprintService()
+
+
+def get_context_builder(
+    exif: ExifExtractor = Depends(get_exif_extractor),
+    ocr: TesseractOCREngine = Depends(get_ocr_engine),
+    visual: HeuristicVisualAnalyzer = Depends(get_visual_analyzer),
+    fingerprinter: FingerprintService = Depends(get_fingerprint_service),
+) -> SearchContextBuilder:
+    return SearchContextBuilder(
+        exif_extractor=exif,
+        ocr_engine=ocr,
+        visual_analyzer=visual,
+        fingerprint_service=fingerprinter,
+    )
+
+
+def get_discovery_engine(
+    settings: Settings = Depends(get_settings_dep),
+    agent_reach: AgentReachWebProvider = Depends(get_agent_reach_web_provider),
+) -> DiscoveryEngine:
+    return DiscoveryEngine(
+        web_providers=[agent_reach],
+        max_candidates=settings.discovery_max_candidates,
+    )
+
+
+def get_agent_policies(settings: Settings = Depends(get_settings_dep)) -> CrawlPolicies:
+    allow = tuple(d.strip().lower() for d in settings.agent_allow_domains.split(",") if d.strip())
+    return CrawlPolicies(
+        max_pages=settings.agent_max_pages,
+        max_depth=settings.agent_max_depth,
+        max_images=settings.agent_max_images,
+        max_runtime_seconds=settings.agent_max_runtime_seconds,
+        max_requests_per_domain=settings.agent_max_requests_per_domain,
+        per_domain_min_interval=settings.agent_per_domain_min_interval,
+        timeout_seconds=settings.agent_http_timeout_seconds,
+        respect_robots=settings.agent_respect_robots,
+        user_agent=settings.http_user_agent,
+        allow_domains=allow,
+    )
+
+
+def get_web_toolbox(
+    policies: CrawlPolicies = Depends(get_agent_policies),
+) -> WebToolbox:
+    client = httpx.AsyncClient(
+        timeout=policies.timeout_seconds,
+        follow_redirects=False,
+        headers={"User-Agent": policies.user_agent},
+    )
+    return WebToolbox(client, policies)
+
+
+def get_research_agent(
+    policies: CrawlPolicies = Depends(get_agent_policies),
+    toolbox: WebToolbox = Depends(get_web_toolbox),
+) -> ResearchAgent:
+    return ResearchAgent(policies=policies, toolbox=toolbox)
 
 
 def get_local_search_service(
@@ -122,10 +231,11 @@ def get_face_indexing_service(
 
 
 def get_internet_search_service(
-    client: AgentReachClient = Depends(get_agent_reach_client),
-    crawler: CandidateCrawler = Depends(get_candidate_crawler),
+    engine: DiscoveryEngine = Depends(get_discovery_engine),
+    context_builder: SearchContextBuilder = Depends(get_context_builder),
+    settings: Settings = Depends(get_settings_dep),
 ) -> InternetSearchService:
-    return InternetSearchService(client, crawler)
+    return InternetSearchService(engine, context_builder, settings)
 
 
 def get_hybrid_search_service(

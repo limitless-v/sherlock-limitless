@@ -37,3 +37,4 @@ class SearchResponse:
     mode: SearchMode
     status: str = "completed"
     results: list[SearchResult] = field(default_factory=list)
+    providers: dict[str, dict] = field(default_factory=dict)

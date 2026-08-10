@@ -10,8 +10,8 @@ the API layer):
 
 The finalize pipeline (merge, face verification, deduplication, ranking)
 is intentionally wired to later phases; today it only normalizes what the
-executed strategy already returns. INTERNET / HYBRID strategies raise
-NotImplementedError until their phases and keep surfacing as 501.
+executed strategy already returns. INTERNET / HYBRID strategies degrade
+gracefully (202 + `status: "degraded"`) when Agent Reach is unavailable.
 """
 
 from app.search.deduplication import ResultDeduplicator
@@ -110,11 +110,7 @@ class SearchOrchestrator:
     # --- execution ----------------------------------------------------------
 
     async def execute(self, request: SearchRequest) -> SearchResponse:
-        """Validate, route, execute, and return a normalized response.
-
-        INTERNET / HYBRID propagate NotImplementedError (surfacing as 501
-        until their strategies are implemented in later phases).
-        """
+        """Validate, route, execute, and return a normalized response."""
         mode = self.resolve_mode(request)
         strategy = self._resolve_strategy(mode)
         response = await strategy.search(request)
@@ -123,8 +119,7 @@ class SearchOrchestrator:
     def _finalize(self, mode: SearchMode, response: SearchResponse) -> SearchResponse:
         """Final result pipeline hook.
 
-        Currently passes the strategy output through (single-source LOCAL
-        results are already ordered). Later phases slot merge (Phase 16),
-        face verification (15), deduplication (17), and ranking (18) here.
+        Currently passes the strategy output through; later phases slot
+        verification, deduplication, and ranking here.
         """
         return response
