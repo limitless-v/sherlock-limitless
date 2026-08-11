@@ -15,4 +15,13 @@ class ResultDeduplicator:
 
     def deduplicate(self, results: list[SearchResult]) -> list[SearchResult]:
         """Return a de-duplicated, order-preserving result list."""
-        raise NotImplementedError("Deduplication not implemented in scaffold.")
+        seen: set[str] = set()
+        deduplicated: list[SearchResult] = []
+        for result in results:
+            # Use URL as primary deduplication key
+            key = result.url
+            if key in seen:
+                continue
+            seen.add(key)
+            deduplicated.append(result)
+        return deduplicated

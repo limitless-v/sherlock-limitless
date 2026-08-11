@@ -18,3 +18,5 @@ class SearchRequest:
     mode: SearchMode = SearchMode.INTERNET
     max_results: int = 50
     sources: list[str] = field(default_factory=list)
+    user_id: int | None = None
+    uploaded_image: str | None = None

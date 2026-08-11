@@ -1,6 +1,7 @@
 """Pydantic request/response schemas (scaffold)."""
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -41,6 +42,8 @@ class SearchCreateRequest(BaseModel):
     mode: SearchMode = SearchMode.INTERNET
     max_results: int = Field(default=50, ge=1, le=200)
     sources: list[str] = Field(default_factory=list)
+    user_id: int | None = None
+    uploaded_image: str | None = None
 
 
 class SearchResultRead(ORMModel):
@@ -58,6 +61,9 @@ class SearchResultRead(ORMModel):
     face_similarity: float = 0.0
     confidence: str = "low"
     discovered_at: datetime | None = None
+    location: str | None = None
+    date: str | None = None
+    profiles: list[dict] = Field(default_factory=list)
 
 
 class SearchResponseRead(ORMModel):
@@ -68,17 +74,12 @@ class SearchResponseRead(ORMModel):
     status: str = "completed"
     results: list[SearchResultRead] = Field(default_factory=list)
     providers: dict[str, dict] = Field(default_factory=dict)
+    ranked_evidence: list[dict] | None = None
 
 
 class SearchCreateResponse(BaseModel):
     search_id: int
     status: str = "pending"
-
-
-class DetectedFaceRead(ORMModel):
-    id: int
-    face_image: str
-    embedding_path: str | None
 
 
 class MatchedProfileRead(ORMModel):
@@ -89,17 +90,39 @@ class MatchedProfileRead(ORMModel):
     confidence: float
 
 
+class DetectedFaceRead(ORMModel):
+    id: int
+    face_image: str
+    embedding_path: str | None
+    matched_profiles: list[MatchedProfileRead] = Field(default_factory=list)
+
+
 class SearchDetailRead(ORMModel):
     id: int
     uploaded_image: str
     created_at: datetime
     detected_faces: list[DetectedFaceRead] = Field(default_factory=list)
+    matched_profiles: list[MatchedProfileRead] = Field(default_factory=list)
+    mode: str = ""
+    status: str = ""
+    providers: dict[str, dict] = Field(default_factory=dict)
+    ranked_evidence: list[dict] | None = None
 
 
 class SearchHistoryItem(ORMModel):
     id: int
     uploaded_image: str
     created_at: datetime
+    mode: str = ""
+    status: str = ""
+
+
+class SearchHistoryRead(BaseModel):
+    """Paginated search history response."""
+    items: list[SearchHistoryItem]
+    total: int
+    page: int
+    page_size: int
 
 
 class ProfileDetailRead(ORMModel):
@@ -109,3 +132,10 @@ class ProfileDetailRead(ORMModel):
     image_url: str | None
     confidence: float
     candidate_images: list[str] = Field(default_factory=list)
+
+
+class SearchEvidenceRead(BaseModel):
+    """Evidence graph for a search."""
+    search_id: int
+    nodes: list[dict[str, Any]]
+    edges: list[dict[str, Any]]

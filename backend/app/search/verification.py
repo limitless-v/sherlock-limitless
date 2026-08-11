@@ -13,6 +13,12 @@ class CandidateVerifier:
     def __init__(self, similarity_engine) -> None:
         self._similarity_engine = similarity_engine
 
-    async def verify(self, result: SearchResult, query_embedding: list[float]) -> SearchResult:
-        """Attach face_similarity / confidence to a candidate result."""
-        raise NotImplementedError("Candidate verification not implemented in scaffold.")
+    def verify(self, results: list[SearchResult], query_embedding: list[float] | None = None) -> list[SearchResult]:
+        """Attach face_similarity / confidence to candidate results.
+        
+        If query_embedding is not provided, returns results unchanged.
+        """
+        if query_embedding is None:
+            return results
+        # TODO: Implement actual face verification against query_embedding
+        return results

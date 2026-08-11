@@ -96,6 +96,17 @@ class Settings(BaseSettings):
     agent_respect_robots: bool = Field(default=True, alias="AGENT_RESPECT_ROBOTS")
     agent_allow_domains: str = Field(default="", alias="AGENT_ALLOW_DOMAINS")
 
+    candidate_max_images_per_page: int = Field(default=5, alias="CANDIDATE_MAX_IMAGES_PER_PAGE")
+    candidate_max_profiles_per_page: int = Field(default=10, alias="CANDIDATE_MAX_PROFILES_PER_PAGE")
+
+    crawler_max_image_size_mb: int = Field(default=10, alias="CRAWLER_MAX_IMAGE_SIZE_MB")
+    crawler_p_hash_threshold_exact: int = Field(default=0, alias="CRAWLER_P_HASH_THRESHOLD_EXACT")
+    crawler_p_hash_threshold_near: int = Field(default=10, alias="CRAWLER_P_HASH_THRESHOLD_NEAR")
+    crawler_p_hash_threshold_similar: int = Field(default=20, alias="CRAWLER_P_HASH_THRESHOLD_SIMILAR")
+
+    ranking_strong_threshold: float = Field(default=0.8, alias="RANKING_STRONG_THRESHOLD")
+    ranking_medium_threshold: float = Field(default=0.5, alias="RANKING_MEDIUM_THRESHOLD")
+
     ollama_enabled: bool = Field(default=False, alias="OLLAMA_ENABLED")
     ollama_base_url: str = Field(default="http://localhost:11434", alias="OLLAMA_BASE_URL")
     ollama_model: str = Field(default="llama3", alias="OLLAMA_MODEL")
