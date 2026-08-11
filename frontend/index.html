@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sherlock OSINT - Face Search & OSINT Platform</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="container">
+        <div class="header-content">
+          <div class="logo">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/>
+              <path d="M12 16V12"/>
+              <path d="M12 8h.01"/>
+            </svg>
+            <span>Sherlock OSINT</span>
+          </div>
+          <nav class="nav">
+            <a href="/upload.html" class="nav-link active">Investigate</a>
+            <a href="/results.html" class="nav-link">Results</a>
+            <a href="/history.html" class="nav-link">History</a>
+            <a href="/settings.html" class="nav-link">Settings</a>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="container">
+        <section class="hero">
+          <div class="hero-content">
+            <div class="badge">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+              <span>Sherlock OSINT</span>
+            </div>
+            <h1>Drop an image to investigate</h1>
+            <p>Upload a photo and Sherlock will extract faces, metadata, and visual context to search across public sources and local databases.</          </p>
+        </section>
+
+        <section class="upload-section">
+          <div class="upload-card">
+            <div class="drop-zone" id="dropZone">
+              <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" hidden>
+              <div class="drop-content" id="dropContent">
+                <svg class="upload-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <h3>Drop image here or click to browse</h3>
+                <p>Supports JPEG, PNG, WebP up to 10MB</p>
+                <button class="btn btn-outline" id="browseBtn">Select File</button>
+              </div>
+              <div class="preview-content hidden" id="previewContent">
+                <div class="preview-image-wrapper">
+                  <img id="previewImage" alt="Preview">
+                  <button class="remove-btn" id="removeBtn" aria-label="Remove image">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                </div>
+                <div class="file-info" id="fileInfo"></div>
+              </div>
+            </div>
+
+            <div class="settings-panel hidden" id="settingsPanel">
+              <div class="setting-group">
+                <label>Search Mode</label>
+                <select id="modeSelect" class="select">
+                  <option value="local">Local Only - FAISS vector search</option>
+                  <option value="internet" selected>Internet OSINT - Agent Reach</option>
+                  <option value="hybrid">Hybrid - Combined search</option>
+                </select>
+              </div>
+              <div class="setting-group">
+                <label>Max Results</label>
+                <select id="maxResults" class="select">
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="50" selected>50</option>
+                  <option value="100">100</option>
+                  <option value="200">200</option>
+                </select>
+              </div>
+              <button class="btn btn-primary btn-lg" id="startSearchBtn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                Start Investigation
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="features">
+          <h2>Investigation Capabilities</h2>
+          <div class="features-grid">
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </div>
+              <h3>Local Face Search</h3>
+              <p>FAISS-powered vector similarity search across your local face database</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="2" y1="12" x2="22" y2="12"/>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+              </div>
+              <h3>Internet OSINT</h3>
+              <p>Agent Reach integration for public web discovery and profile correlation</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+              </div>
+              <h3>Hybrid Mode</h3>
+              <p>Combines local vector search with internet OSINT for comprehensive results</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+              </div>
+              <h3>Face Embeddings</h3>
+              <p>ArcFace embeddings with InsightFace detection for accurate face recognition</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="9" y1="9" x2="15" y2="15"/>
+                  <line x1="15" y1="9" x2="9" y2="15"/>
+                </svg>
+              </div>
+              <h3>Evidence Graph</h3>
+              <p>Build evidence networks connecting images, URLs, profiles, and identities</p>
+            </article>
+            <article class="feature-card">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              </div>
+              <h3>Evidence Ranking</h3>
+              <p>Rank evidence by strength: exact matches, profile links, identity correlations</p>
+            </article>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <p>Sherlock OSINT - Local-first Face Search & OSINT Platform</p>
+        <div class="footer-links">
+          <a href="https://github.com/sherlock/sherlock" target="_blank">GitHub</a>
+          <a href="https://docs.sherlock.ai" target="_blank">Documentation</a>
+          <a href="https://github.com/sherlock/sherlock/issues" target="_blank">Report Issue</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
