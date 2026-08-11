@@ -55,7 +55,7 @@ def _local_response(request) -> SearchResponse:
 
 
 @pytest.fixture
-def override_search_service():
+def override_search_service(db_session):
     internet = InternetSearchService(agent_reach_client=AgentReachClient())
     local = _StubStrategy(_local_response)
     hybrid = HybridSearchService(local, internet)  # type: ignore[arg-type]
@@ -68,7 +68,7 @@ def override_search_service():
         ranker=ResultRanker(),
         default_mode=SearchMode.INTERNET,
     )
-    app.dependency_overrides[get_search_service] = lambda: SearchService(orchestrator=orchestrator)
+    app.dependency_overrides[get_search_service] = lambda: SearchService(orchestrator=orchestrator, session=db_session)
     yield
     app.dependency_overrides.pop(get_search_service, None)
 
